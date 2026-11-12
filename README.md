@@ -1,0 +1,85 @@
+# MindChain scripts
+
+Deploy and run a MindChain L2 (OP Stack, custom gas token, game type 9 with challenger) on Sepolia.
+Every value lives in `config.env`. Scripts ask for private keys when needed and check each key
+matches its role address. Keys are never saved to disk or shown in commands.
+
+Run all scripts with `bash` (works from fish, zsh or bash), from this folder.
+
+## Before you start
+
+1. Build the binaries from the mind-chain repo into `~/mind-chain/bin`:
+   `mc-deployer cannon kona-host mc-node mc-reth mc-batcher mc-proposer mc-challenger`
+2. Create 5 keys (`cast wallet new`, once per role): admin, sequencer, batcher, proposer, challenger.
+   Fund on Sepolia: admin ~1 ETH, batcher ~0.5 ETH, proposer 2-4 ETH (0.08 ETH bond per proposal),
+   challenger ~0.5 ETH. Sequencer needs nothing.
+3. Edit `config.env`: RPC and beacon URLs, the 5 addresses, a new `L2_CHAIN_ID`, and a new `WORKDIR`
+   for every new chain.
+4. Keep the machine awake while the chain runs (`caffeinate -dimsu` on macOS). If the node stops
+   for hours, catching up again takes hours.
+
+## Deploy (in order)
+
+| Step | Command | Time | Notes |
+|---|---|---|---|
+| 0 | `bash scripts/00-check.sh` | 10 s | tools, binaries, repo fix, config |
+| 1 | `bash scripts/01-bootstrap.sh` | 5-10 min | admin key; shared contracts + OPCM |
+| 2 | `bash scripts/02-intent.sh` | 5 s | writes `intent.toml` from config.env; read it |
+| 3 | `bash scripts/03-prepare.sh` | 2 min | admin key; **prints GENESIS TIME. Clock starts now** |
+| 4 | `bash scripts/04-kona-configs.sh` | 5 s | chain config for the proof program |
+| 5 | `bash scripts/05-build-prestate.sh` | ~30 min | Colima/Docker; do not interrupt |
+| 6 | `bash scripts/06-deploy.sh` | 5 min | admin key (same as step 3); deploys + verifies |
+| - | `bash tools/backup.sh` | 5 s | do it right after step 6 |
+
+Steps 4-6 must finish **before the genesis time** printed by step 3. If it passes, redo steps 3-6.
+
+## Run the chain (one terminal tab each, in this order)
+
+| Order | Command | Key |
+|---|---|---|
+| 1 | `bash run/mc-reth.sh` | - |
+| 2 | `bash run/mc-node.sh` | - (waits for genesis by itself) |
+| 3 | `bash run/batcher.sh` | batcher |
+| 4 | `bash run/proposer.sh` | proposer (start when `tools/status.sh` shows caught up) |
+| 5 | `bash run/challenger.sh` | challenger |
+
+Logs: `$WORKDIR/logs/*.log`.
+
+## Tools
+
+| Command | What it does |
+|---|---|
+| `bash tools/status.sh` | health of every component, L1 gap, games, balances, recent errors |
+| `bash tools/verify-l1.sh` | game type 9 respected, game impl, bond, prestate on-chain |
+| `bash tools/mint-nila.sh 1000000 [address]` | mint gas token on L2 via L1 deposit (admin key) |
+| `bash tools/backup.sh` | back up deployment files (no databases, no keys) |
+
+## Healthy chain
+
+- `unsafe` rises every 2 s; `safe` a few minutes behind; `finalized` ~15-20 min behind safe.
+- `l1_gap` under 10.
+- Challenger log: `Game info ... status="In Progress"` with no repeated errors. An honest game stays
+  In Progress for 3.5 days, then resolves DEFENDER_WINS.
+
+## Problems we hit and how the scripts avoid them
+
+| Problem | Avoided by |
+|---|---|
+| Private key pasted into a command or chat | keys asked silently, checked against role address |
+| Placeholder left in intent (`0xADMIN`) | intent generated from config.env and checked |
+| `respectedGameType` ignored (game type 5) | placed under `[chains.deployOverrides]`; checked after prepare |
+| Prestate build fails: `rust/op-reth not found` | step 0/5 check the Dockerfile; fix is in the repo (`git pull`) |
+| `KONA_CUSTOM_CONFIGS_DIR ... not a directory` | absolute path used |
+| Wrong prestate (single vs interop) | type 9 uses the interop (`-int`) prestate; saved to `prestate/PRESTATE_HASH` |
+| `continue`: no prestate committed | step 6 commits the prestate first |
+| Sequencer started before genesis builds nothing | `run/mc-node.sh` waits for genesis |
+| `context deadline exceeded` / slow catch-up | low-latency `L1_RPC_URL`; separate `L1_TX_RPC_URL` key for the other services |
+| Proposer: cannot get sync status | start it only when caught up (`tools/status.sh`) |
+| Laptop sleep stops the chain for hours | keep it awake, or run on a server |
+
+## After downtime (catching up)
+
+1. `bash run/mc-node.sh verifier` (no block building, faster catch-up). Do not restart it while catching up.
+2. Watch `bash tools/status.sh` until `l1_gap` < 10.
+3. Ctrl+C, then `bash run/mc-node.sh` (sequencer). Then restart the proposer.
+# Mindchain-Scripts
