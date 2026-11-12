@@ -10,26 +10,15 @@ need_file "$R/justfile" "(clone it: git clone --recurse-submodules https://githu
 mkdir -p "$BIN"
 
 if [ "$MODE" = build ]; then
-  info "Go services (mc-node, mc-batcher, mc-proposer, mc-challenger)"
-  (cd "$R" && just mc-node && just mc-batcher && just mc-proposer && just mc-challenger)
-  info "mc-deployer v0.8.1 and cannon v1.6.0 (from releases/)"
-  (cd "$R" && bash mindchain/scripts/build-tools.sh)
-  info "mc-reth and kona-host (Rust, takes a while)"
-  (cd "$R/rust" && cargo build --release -p mc-reth --bin mc-reth && cargo build --release --bin kona-host)
+  info "Building with the repo script (output: $R/bin)"
+  bash "$R/mindchain/scripts/build-all.sh"
 elif [ "$MODE" != --copy ]; then
   die "Usage: scripts/build-binaries.sh [--copy]"
 fi
 
 info "Copying binaries to $BIN"
-copy() { need_file "$1" "(build it first: bash scripts/build-binaries.sh)"; cp "$1" "$BIN/"; ok "$(basename "$1")"; }
-copy "$R/mc-node/bin/mc-node"
-copy "$R/mc-batcher/bin/mc-batcher"
-copy "$R/mc-proposer/bin/mc-proposer"
-copy "$R/mc-challenger/bin/mc-challenger"
-copy "$R/bin/mc-deployer"
-copy "$R/bin/cannon"
-copy "$R/rust/target/release/mc-reth"
-copy "$R/rust/target/release/kona-host"
+copy() { need_file "$1" "(build it: bash $R/mindchain/scripts/build-all.sh)"; cp "$1" "$BIN/"; ok "$(basename "$1")"; }
+for b in mc-deployer cannon kona-host mc-node mc-reth mc-batcher mc-proposer mc-challenger; do copy "$R/bin/$b"; done
 chmod +x "$BIN"/*
 
 info "Versions"

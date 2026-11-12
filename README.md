@@ -62,6 +62,7 @@ Logs: `$WORKDIR/logs/*.log`.
 | `bash tools/verify-l1.sh` | game type 9 respected, game impl, bond, prestate on-chain |
 | `bash tools/mint-nila.sh 1000000 [address]` | mint gas token on L2 via L1 deposit (admin key) |
 | `bash tools/backup.sh` | back up deployment files (no databases, no keys) |
+| `bash tools/stop.sh [service...]` | stop services cleanly in safe order (challenger, proposer, batcher, mc-node, mc-reth) |
 
 ## Healthy chain
 
