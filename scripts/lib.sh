@@ -3,9 +3,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-[ -f "$ROOT/config.env" ] || { echo "Missing $ROOT/config.env"; exit 1; }
+[ -f "$ROOT/config.env" ] || { echo "Missing config.env. Run: cp $ROOT/config.example.env $ROOT/config.env  and edit it."; exit 1; }
 # shellcheck disable=SC1091
 source "$ROOT/config.env"
+chmod 600 "$ROOT/config.env" 2>/dev/null || true   # contains private keys: owner-only
 
 SEQ_DIR="$WORKDIR/sequencer"
 LOG_DIR="$WORKDIR/logs"
@@ -29,6 +30,7 @@ fmt_time() { date -r "$1" 2>/dev/null || date -d "@$1"; }
 
 no_placeholders() {
   case "$L1_RPC_URL$L1_BEACON_URL" in *YOUR-*) die "Set L1_RPC_URL and L1_BEACON_URL in config.env";; esac
+  case "$L2_CHAIN_ID$ADMIN$SEQUENCER$BATCHER$PROPOSER$CHALLENGER" in *YOUR-*) die "Set L2_CHAIN_ID and the 5 role addresses in config.env";; esac
 }
 
 # ask_key ENV_VAR "Role" EXPECTED_ADDRESS
@@ -36,6 +38,10 @@ no_placeholders() {
 ask_key() {
   local var="$1" role="$2" expected="$3" key addr
   key="$(printenv "$var" || true)"
+  if [ -z "$key" ]; then   # then the key from config.env (e.g. ADMIN_PRIVATE_KEY)
+    local cfg; cfg="$(echo "$role" | tr '[:lower:]' '[:upper:]')_PRIVATE_KEY"
+    key="$(eval "echo \"\${$cfg:-}\"")"
+  fi
   if [ -z "$key" ]; then
     read -r -s -p "$role private key (input hidden): " key; echo
   fi

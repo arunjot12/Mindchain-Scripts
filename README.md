@@ -1,20 +1,27 @@
 # MindChain scripts
 
 Deploy and run a MindChain L2 (OP Stack, custom gas token, game type 9 with challenger) on Sepolia.
-Every value lives in `config.env`. Scripts ask for private keys when needed and check each key
-matches its role address. Keys are never saved to disk or shown in commands.
+Every value lives in `config.env`, including the private keys (devnet only). A key left empty there
+is asked for at runtime instead. Every key is checked against its role address before use, and keys
+are passed to the services by environment variable, never on the command line.
+
+**`config.env` contains private keys:** it is owner-readable only (`chmod 600`), excluded by
+`.gitignore` and not included by `tools/backup.sh`. Never commit, share or paste it. Never put the
+admin key on a server, and never use these keys on mainnet.
 
 Run all scripts with `bash` (works from fish, zsh or bash), from this folder.
 
 ## Before you start
 
+0. Create your own config from the template (it is not committed):
+   `cp config.example.env config.env`
 1. Build the binaries from the mind-chain repo into `~/mind-chain/bin`:
    `mc-deployer cannon kona-host mc-node mc-reth mc-batcher mc-proposer mc-challenger`
 2. Create 5 keys (`cast wallet new`, once per role): admin, sequencer, batcher, proposer, challenger.
    Fund on Sepolia: admin ~1 ETH, batcher ~0.5 ETH, proposer 2-4 ETH (0.08 ETH bond per proposal),
    challenger ~0.5 ETH. Sequencer needs nothing.
-3. Edit `config.env`: RPC and beacon URLs, the 5 addresses, a new `L2_CHAIN_ID`, and a new `WORKDIR`
-   for every new chain.
+3. Edit `config.env`: RPC and beacon URLs, the 5 addresses and their private keys, a new `L2_CHAIN_ID`,
+   and a new `WORKDIR` for every new chain.
 4. Keep the machine awake while the chain runs (`caffeinate -dimsu` on macOS). If the node stops
    for hours, catching up again takes hours.
 
