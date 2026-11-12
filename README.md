@@ -15,8 +15,10 @@ Run all scripts with `bash` (works from fish, zsh or bash), from this folder.
 
 0. Create your own config from the template (it is not committed):
    `cp config.example.env config.env`
-1. Build the binaries from the mind-chain repo into `~/mind-chain/bin`:
-   `mc-deployer cannon kona-host mc-node mc-reth mc-batcher mc-proposer mc-challenger`
+1. Put all binaries in this folder's `bin/` (not committed):
+   - build from the mind-chain repo and copy: `bash scripts/build-binaries.sh`
+   - or, if you already built them in the repo: `bash scripts/build-binaries.sh --copy`
+   It fills `bin/` with `mc-deployer cannon kona-host mc-node mc-reth mc-batcher mc-proposer mc-challenger`.
 2. Create 5 keys (`cast wallet new`, once per role): admin, sequencer, batcher, proposer, challenger.
    Fund on Sepolia: admin ~1 ETH, batcher ~0.5 ETH, proposer 2-4 ETH (0.08 ETH bond per proposal),
    challenger ~0.5 ETH. Sequencer needs nothing.

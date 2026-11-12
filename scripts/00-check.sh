@@ -8,7 +8,7 @@ command -v colima >/dev/null && ok "colima" || warn "colima not found (needed fo
 
 info "MindChain binaries in $BIN"
 for b in mc-deployer mc-node mc-reth mc-batcher mc-proposer mc-challenger cannon kona-host; do
-  need_file "$BIN/$b" "(build them from the mind-chain repo, see README)"
+  need_file "$BIN/$b" "(run: bash scripts/build-binaries.sh)"
 done
 "$BIN/mc-deployer" --version | sed 's/^/    /'
 "$BIN/cannon" --version | sed 's/^/    /'

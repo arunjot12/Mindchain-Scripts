@@ -1,2 +1,4 @@
 config.env
 *.log
+bin/*
+!bin/.gitkeep
