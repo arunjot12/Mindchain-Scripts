@@ -36,7 +36,7 @@ Run all scripts with `bash` (works from fish, zsh or bash), from this folder.
 | 2 | `bash scripts/02-intent.sh` | 5 s | writes `intent.toml` from config.env; read it |
 | 3 | `bash scripts/03-prepare.sh` | 2 min | admin key; **prints GENESIS TIME. Clock starts now** |
 | 4 | `bash scripts/04-kona-configs.sh` | 5 s | chain config for the proof program |
-| 5 | `bash scripts/05-build-prestate.sh` | ~30 min | Colima/Docker; do not interrupt |
+| 5 | `bash scripts/05-build-prestate.sh` | ~30 min | Colima/Docker; do not interrupt. Stops Colima when done (`KEEP_COLIMA=true` to keep it) |
 | 6 | `bash scripts/06-deploy.sh` | 5 min | admin key (same as step 3); deploys + verifies |
 | - | `bash tools/backup.sh` | 5 s | do it right after step 6 |
 

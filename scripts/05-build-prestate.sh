@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Step 5: build the kona prestate with Docker (Colima). ~30 min first time. Do not interrupt.
 # Game type 9 uses the INTEROP prestate (kona-client-int).
+# Colima is stopped automatically when the script ends (success, failure or Ctrl+C)
+# to free memory and CPU. Keep it running with: KEEP_COLIMA=true bash scripts/05-build-prestate.sh
 source "$(dirname "$0")/lib.sh"
 CFG="$PRESTATE_DIR/custom-configs"
 for f in configs.json chainList.json depsets.json; do need_file "$CFG/$f" "(run scripts/04-kona-configs.sh)"; done
@@ -14,10 +16,28 @@ if [ -f "$WORKDIR/GENESIS_TIME" ]; then
   info "Minutes until genesis: $LEFT (build ~30 min + deploy ~5 min)"
 fi
 
-if command -v colima >/dev/null; then
-  colima status >/dev/null 2>&1 || { info "Starting Colima"; colima start; }
+docker_ok() { docker info >/dev/null 2>&1; }
+if ! docker_ok && command -v colima >/dev/null; then
+  colima status >/dev/null 2>&1 || { info "Starting Colima (let it finish, do not press Ctrl+C)"; colima start; }
+  docker context use colima >/dev/null 2>&1 || true
+  if ! docker_ok; then
+    warn "Colima is running but Docker does not answer (often after an interrupted start). Restarting Colima..."
+    colima stop >/dev/null 2>&1 || colima stop --force >/dev/null 2>&1 || true
+    colima start
+    docker context use colima >/dev/null 2>&1 || true
+  fi
 fi
-docker info >/dev/null 2>&1 || die "Docker is not running (start Colima)."
+docker_ok || die "Docker is not running. Try: colima stop --force; colima start; docker context use colima"
+ok "Docker $(docker info --format '{{.ServerVersion}}')"
+
+stop_colima() {
+  [ "${KEEP_COLIMA:-false}" = true ] && { info "Leaving Colima running (KEEP_COLIMA=true)"; return; }
+  command -v colima >/dev/null || return
+  info "Stopping Colima to free memory/CPU"
+  colima stop >/dev/null 2>&1 || colima stop --force >/dev/null 2>&1 || warn "Could not stop Colima; run: colima stop --force"
+  colima status >/dev/null 2>&1 && warn "Colima still running" || ok "Colima stopped"
+}
+trap stop_colima EXIT
 
 OUT="$MINDCHAIN_REPO/rust/kona/prestate-artifacts-cannon-interop"
 rm -rf "$MINDCHAIN_REPO/rust/kona/prestate-artifacts-cannon" "$OUT"
