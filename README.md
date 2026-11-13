@@ -40,7 +40,9 @@ Run all scripts with `bash` (works from fish, zsh or bash), from this folder.
 | 6 | `bash scripts/06-deploy.sh` | 5 min | admin key (same as step 3); deploys + verifies |
 | - | `bash tools/backup.sh` | 5 s | do it right after step 6 |
 
-Steps 4-6 must finish **before the genesis time** printed by step 3. If it passes, redo steps 3-6.
+Steps 4-6 must finish **before the genesis time** printed by step 3 (`GENESIS_DELAY_MINUTES`, default 15 min
+after step 3; enough with a cached prestate build). If it passes, redo steps 3-6. First build ever (no
+cache, ~30 min): set `GENESIS_DELAY_MINUTES=45`.
 
 ## Run the chain (one terminal tab each, in this order)
 
