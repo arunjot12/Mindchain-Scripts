@@ -8,6 +8,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT/config.env"
 chmod 600 "$ROOT/config.env" 2>/dev/null || true   # contains private keys: owner-only
 
+# defaults for older config.env files
+: "${RPC_BIND_ADDR:=127.0.0.1}"
+: "${L2_RPC_URL:=http://127.0.0.1:$RETH_HTTP_PORT}"
+: "${NODE_RPC_URL:=http://127.0.0.1:$NODE_RPC_PORT}"
+: "${P2P_ENABLED:=false}" "${SYNC_MODE:=consensus-layer}" "${P2P_PORT:=9222}"
+: "${P2P_ADVERTISE_IP:=}" "${P2P_STATIC_PEERS:=}" "${RETH_TRUSTED_PEERS:=}"
+
 SEQ_DIR="$WORKDIR/sequencer"
 LOG_DIR="$WORKDIR/logs"
 DEPLOYER_DIR="$WORKDIR/.deployer"

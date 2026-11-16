@@ -5,7 +5,7 @@ source "$(dirname "$0")/../scripts/lib.sh"
 no_placeholders
 AMOUNT="${1:?Usage: tools/mint-nila.sh <amount> [recipient]}"; TO="${2:-$ADMIN}"
 LC=0x420000000000000000000000000000000000002a; RESERVE=0x4200000000000000000000000000000000000029
-RETH="http://127.0.0.1:$RETH_HTTP_PORT"; PORTAL=$(state_addr OptimismPortalProxy)
+RETH="$L2_RPC_URL"; PORTAL=$(state_addr OptimismPortalProxy)
 ask_key ADMIN_KEY "Admin" "$ADMIN"
 deposit() { cast send "$PORTAL" "depositTransaction(address,uint256,uint64,bool,bytes)" "$LC" 0 200000 false "$1" \
               --rpc-url "$L1_TX_RPC_URL" --private-key "$ADMIN_KEY" | grep -E 'status|transactionHash'; }

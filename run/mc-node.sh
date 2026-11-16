@@ -10,6 +10,20 @@ cd "$SEQ_DIR"
 for f in rollup.json jwt.txt; do need_file "$SEQ_DIR/$f"; done
 cast block-number --rpc-url "http://127.0.0.1:$RETH_HTTP_PORT" >/dev/null 2>&1 || die "mc-reth is not running (start run/mc-reth.sh first)"
 
+TRUST=(); [ "$L1_TRUST_RPC" = true ] && TRUST=(--l1.trustrpc)
+
+P2P=(--p2p.disable)
+if [ "$P2P_ENABLED" = true ]; then
+  P2P=(--p2p.listen.ip=0.0.0.0 --p2p.listen.tcp="$P2P_PORT" --p2p.listen.udp="$P2P_PORT"
+       --p2p.priv.path=./p2p_node_key.txt --p2p.no-discovery)
+  [ -n "$P2P_ADVERTISE_IP" ] && P2P+=(--p2p.advertise.ip="$P2P_ADVERTISE_IP")
+  [ -n "$P2P_STATIC_PEERS" ] && P2P+=(--p2p.static="$P2P_STATIC_PEERS")
+  if [ "$MODE" = sequencer ]; then
+    ask_key OP_NODE_P2P_SEQUENCER_KEY "Sequencer" "$SEQUENCER"   # signs blocks so peers accept them
+  fi
+fi
+[ "$MODE" = sequencer ] && [ "$SYNC_MODE" = execution-layer ] && die "The sequencer must use SYNC_MODE=consensus-layer"
+
 SEQ_FLAGS=()
 if [ "$MODE" = sequencer ]; then
   SEQ_FLAGS=(--sequencer.enabled --sequencer.l1-confs=4)
@@ -22,7 +36,6 @@ if [ "$MODE" = sequencer ]; then
 elif [ "$MODE" != verifier ]; then
   die "Usage: run/mc-node.sh [sequencer|verifier]"
 fi
-TRUST=(); [ "$L1_TRUST_RPC" = true ] && TRUST=(--l1.trustrpc)
 
 info "mc-node ($MODE): rpc 127.0.0.1:$NODE_RPC_PORT"
 "$BIN/mc-node" \
@@ -30,6 +43,6 @@ info "mc-node ($MODE): rpc 127.0.0.1:$NODE_RPC_PORT"
   --l1.beacon="$L1_BEACON_URL" \
   --l2="http://127.0.0.1:$RETH_AUTH_PORT" --l2.jwt-secret=./jwt.txt --l2.enginekind=reth \
   --rollup.config=./rollup.json ${SEQ_FLAGS[@]+"${SEQ_FLAGS[@]}"} --verifier.l1-confs=4 \
-  --p2p.disable --rpc.addr=127.0.0.1 --rpc.port="$NODE_RPC_PORT" --safedb.path=./safedb \
+  ${P2P[@]+"${P2P[@]}"} --syncmode="$SYNC_MODE" --rpc.addr="$RPC_BIND_ADDR" --rpc.port="$NODE_RPC_PORT" --safedb.path=./safedb \
   --metrics.enabled --metrics.port="$NODE_METRICS_PORT" --log.level=info \
   2>&1 | tee -a "$LOG_DIR/mc-node.log"

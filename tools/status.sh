@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Health check for the whole stack. Safe to run any time.
 source "$(dirname "$0")/../scripts/lib.sh"
-RETH="http://127.0.0.1:$RETH_HTTP_PORT"; NODE="http://127.0.0.1:$NODE_RPC_PORT"
+RETH="$L2_RPC_URL"; NODE="$NODE_RPC_URL"
 
 info "mc-reth"
 if B=$(cast block-number --rpc-url "$RETH" 2>/dev/null); then ok "block $B, chain id $(cast chain-id --rpc-url "$RETH")"; else warn "not reachable"; fi

@@ -11,7 +11,7 @@ ask_key OP_CHALLENGER_PRIVATE_KEY "Challenger" "$CHALLENGER"
 info "mc-challenger: super-cannon-kona, prestate $HASH"
 "$BIN/mc-challenger" \
   --l1-eth-rpc="$L1_TX_RPC_URL" --l1-beacon="$L1_BEACON_URL" \
-  --l2-eth-rpc="http://127.0.0.1:$RETH_HTTP_PORT" --superroot-rpc="http://127.0.0.1:$NODE_RPC_PORT" \
+  --l2-eth-rpc="$L2_RPC_URL" --superroot-rpc="$NODE_RPC_URL" \
   --game-factory-address="$DGF" --game-types=super-cannon-kona \
   --datadir="$WORKDIR/challenger-data" \
   --cannon-bin="$BIN/cannon" --cannon-kona-server="$BIN/kona-host" \

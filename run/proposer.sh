@@ -8,7 +8,7 @@ DGF=$(state_addr DisputeGameFactoryProxy)
 ask_key OP_PROPOSER_PRIVATE_KEY "Proposer" "$PROPOSER"
 info "mc-proposer: game type $RESPECTED_GAME_TYPE every $PROPOSAL_INTERVAL, factory $DGF"
 "$BIN/mc-proposer" \
-  --l1-eth-rpc="$L1_TX_RPC_URL" --superroot-rpcs="http://127.0.0.1:$NODE_RPC_PORT" \
+  --l1-eth-rpc="$L1_TX_RPC_URL" --superroot-rpcs="$NODE_RPC_URL" \
   --game-factory-address="$DGF" --game-type="$RESPECTED_GAME_TYPE" \
   --proposal-interval="$PROPOSAL_INTERVAL" --wait-node-sync=true \
   --rpc.addr=127.0.0.1 --rpc.port="$PROPOSER_RPC_PORT" \

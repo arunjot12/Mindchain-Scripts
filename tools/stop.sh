@@ -14,11 +14,8 @@ for svc in "${ORDER[@]}"; do
   PIDS=$(pids_of "$svc")
   if [ -z "$PIDS" ]; then echo "    $svc: not running"; continue; fi
   info "Stopping $svc (pid $(echo $PIDS))"
-  kill -INT $PIDS 2>/dev/null || true            # same as Ctrl+C: clean shutdown
-  for _ in $(seq 1 30); do [ -z "$(pids_of "$svc")" ] && break; sleep 1; done
-  if [ -n "$(pids_of "$svc")" ]; then
-    warn "$svc still running after 30 s, sending TERM"
-    kill -TERM $(pids_of "$svc") 2>/dev/null || true; sleep 5
-  fi
+  # TERM = clean shutdown for all services (works for background processes too, unlike INT)
+  kill -TERM $PIDS 2>/dev/null || true
+  for _ in $(seq 1 60); do [ -z "$(pids_of "$svc")" ] && break; sleep 1; done
   [ -z "$(pids_of "$svc")" ] && ok "$svc stopped" || warn "$svc did not stop; check: ps aux | grep $svc"
 done
