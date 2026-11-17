@@ -1,4 +1,25 @@
+# private: keys and RPC API keys
 config.env
-*.log
+config.*-old.env
+config.join.env
+
+# binaries (built or copied locally)
 bin/*
 !bin/.gitkeep
+bin.zip
+
+# deployment / chain data (when WORKDIR is this folder)
+.deployer/
+sequencer/
+prestate/
+challenger-data/
+logs/
+bootstrap-superchain.json
+bootstrap-implementations.json
+GENESIS_TIME
+mindchain-join-*.tgz
+mindchain-backup-*.tgz
+*.log
+
+# macOS
+.DS_Store
