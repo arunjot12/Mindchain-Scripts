@@ -8,6 +8,8 @@ if [ "$P2P_ENABLED" = true ]; then
   [ -n "$P2P_ADVERTISE_IP" ] && NET+=(--nat="extip:$P2P_ADVERTISE_IP")
   [ -n "$RETH_TRUSTED_PEERS" ] && NET+=(--trusted-peers="$RETH_TRUSTED_PEERS")
 fi
+# joining PC: forward transactions sent to this node to the sequencer (otherwise they are never included)
+[ -n "$SEQUENCER_RPC_URL" ] && NET+=(--rollup.sequencer="$SEQUENCER_RPC_URL")
 info "mc-reth: http 127.0.0.1:$RETH_HTTP_PORT, engine 127.0.0.1:$RETH_AUTH_PORT"
 "$BIN/mc-reth" node \
   --chain=./genesis.json --datadir=./mc-reth-data \
